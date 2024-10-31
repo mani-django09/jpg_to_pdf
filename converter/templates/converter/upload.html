@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart JPG to PDF Converter</title>
+    <meta name="description" content="Professional image to PDF converter with advanced features">
+    <meta name="keywords" content="JPG to PDF, PNG to PDF, image converter, PDF converter">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f39c12;
+            --accent-color: #2ecc71;
+        }
+
+        body {
+            background: #f8f9fa;
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 4rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .preview-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #eee;
+        }
+
+        .preview-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .preview-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            padding: 20px 0;
+        }
+
+        .preview-card {
+            position: relative;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+
+        .preview-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .preview-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            transition: transform 0.3s ease;
+        }
+
+        .image-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 10px;
+            z-index: 1;
+        }
+
+        .rotate-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .rotate-btn:hover {
+            transform: scale(1.1);
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .progress-wrapper {
+            height: 4px;
+            background: #f0f0f0;
+            margin-top: 10px;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--primary-color);
+            width: 0;
+            transition: width 0.3s ease;
+        }
+
+        .stats-counter {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        .faq-section {
+            padding: 40px 0;
+            background: #fff;
+            margin-top: 40px;
+            border-top: 2px solid #eee;
+        }
+
+        .faq-item {
+            margin-bottom: 20px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .faq-question {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .faq-question:hover {
+            background: #f0f0f0;
+        }
+
+        .faq-answer {
+            padding: 0 20px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .faq-item.active .faq-answer {
+            padding: 15px 20px;
+            max-height: 500px;
+            transition: max-height 0.3s ease-in;
+        }
+
+        .faq-icon {
+            transition: transform 0.3s;
+        }
+
+        .faq-item.active .faq-icon {
+            transform: rotate(180deg);
+        }
+
+        /* Loading and Alert styles */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .alert-floating {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1001;
+        }
+
+        .drop-zone {
+            border: 2px dashed #ccc;
+            transition: all 0.3s ease;
+            background: #fff;
+        }
+
+        .drop-zone.dragover {
+            border-color: var(--primary-color);
+            background: #f8f9fa;
+            transform: scale(1.02);
+        }
+
+        footer {
+            background: #2c3e50;
+            color: white;
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay">
+        <div class="text-white text-center">
+            <i class="fas fa-spinner fa-spin fa-3x"></i>
+            <p class="mt-2">Converting your images...</p>
+        </div>
+    </div>
+
+    <!-- Alert -->
+    <div class="alert alert-floating alert-dismissible fade" role="alert">
+        <span class="alert-message"></span>
+        <button type="button" class="close" data-dismiss="alert">
+            <span>&times;</span>
+        </button>
+    </div>
+
+    <!-- Hero Section -->
+    <div class="hero-section text-center">
+        <div class="container">
+            <h1 class="display-4">Smart Image to PDF Converter</h1>
+            <p class="lead">Transform your images into professional PDFs with our advanced tools</p>
+            <div class="stats-container row mt-4">
+                <div class="col-md-4">
+                    <div class="stats-counter" id="conversions-counter">0</div>
+                    <p>Conversions Today</p>
+                </div>
+                <div class="col-md-4">
+                    <div class="stats-counter" id="users-counter">0</div>
+                    <p>Active Users</p>
+                </div>
+                <div class="col-md-4">
+                    <div class="stats-counter" id="files-counter">0</div>
+                    <p>Files Processed</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Converter Form -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form id="converter-form" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="images">
+                            <div class="drop-zone p-5 text-center border rounded">
+                                <i class="fas fa-cloud-upload-alt fa-3x mb-3"></i>
+                                <h4>Drag & Drop Images Here</h4>
+                                <p>or click to browse</p>
+                                <small class="text-muted">Supports JPG, JPEG, and PNG files</small>
+                            </div>
+                        </label>
+                        <input type="file" id="images" name="images" multiple accept="image/jpeg,image/jpg,image/png" class="d-none">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>PDF Options</label>
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" id="autoEnhance" name="autoEnhance">
+                            <label class="custom-control-label" for="autoEnhance">Auto Enhancement</label>
+                        </div>
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" id="compression" name="compression">
+                            <label class="custom-control-label" for="compression">Smart Compression</label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg btn-block">
+                        <i class="fas fa-file-pdf mr-2"></i>Convert to PDF
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Feature Cards - Moved below the converter form -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <i class="fas fa-magic fa-2x mb-3 text-primary"></i>
+                    <h3>Auto Enhancement</h3>
+                    <p>Automatically improve image quality</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <i class="fas fa-layer-group fa-2x mb-3 text-success"></i>
+                    <h3>Batch Processing</h3>
+                    <p>Convert multiple images at once</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <i class="fas fa-sliders-h fa-2x mb-3 text-warning"></i>
+                    <h3>Custom Filters</h3>
+                    <p>Apply professional filters</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview Section -->
+        <div class="preview-section" id="previewSection" style="display: none;">
+            <div class="preview-header">
+                <h4>Selected Images</h4>
+                <p class="text-muted">You can rotate and apply filters to your images before conversion</p>
+            </div>
+            <div class="preview-container" id="preview-container"></div>
+        </div>
+
+        <!-- FAQ Section -->
+        <div class="faq-section">
+            <h3 class="text-center mb-4">Frequently Asked Questions</h3>
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            What file types are supported?
+                            <i class="fas fa-chevron-down faq-icon"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Our converter supports JPG, JPEG, and PNG image files. All images will be converted to high-quality PDF format while maintaining their original quality.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            How many images can I convert at once?
+                            <i class="fas fa-chevron-down faq-icon"></i>
+                        </div>
+                        <div class="faq-answer">
+                            You can convert multiple images at once. The maximum number depends on your account type, but free users can convert up to 20 images in a single PDF.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            Is there a file size limit?
+                            <i class="fas fa-chevron-down faq-icon"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Yes, each image file should be under 10MB. For larger files, you might want to use the compression option before converting.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            How does auto enhancement work?
+                            <i class="fas fa-chevron-down faq-icon"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Auto enhancement automatically adjusts brightness, contrast, and color saturation to improve image quality. It's especially useful for scanned documents and old photos.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            Is my data secure?
+                            <i class="fas fa-chevron-down faq-icon"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Yes, we take security seriously. All uploads are processed securely and deleted immediately after conversion. We don't store any of your images or PDFs.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5>About Us</h5>
+                    <p>We provide professional image conversion tools for all your needs.</p>
+                </div>
+                <div class="col-md-4">
+                    <h5>Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-light">Privacy Policy</a></li>
+                        <li><a href="#" class="text-light">Terms of Service</a></li>
+                        <li><a href="#" class="text-light">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5>Newsletter</h5>
+                    <div class="input-group">
+                        <input type="email" class="form-control" placeholder="Enter your email">
+                        <div class="input-group-append">
+                            <button class="btn btn-light" type="button">Subscribe</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-4">
+                <p>© 2024 Smart Image to PDF Converter. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        // CSRF token handling
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Alert handling
+        function showAlert(message, type = 'success') {
+            const alert = document.querySelector('.alert-floating');
+            alert.className = `alert alert-floating alert-${type} alert-dismissible fade show`;
+            alert.querySelector('.alert-message').textContent = message;
+            alert.style.display = 'block';
+            setTimeout(() => {
+                alert.style.display = 'none';
+                alert.classList.remove('show');
+            }, 5000);
+        }
+
+        // Create image card with rotation controls
+        function createImageCard(file, reader) {
+            const card = document.createElement('div');
+            card.className = 'preview-card';
+
+            // Image controls
+            const controls = document.createElement('div');
+            controls.className = 'image-controls';
+
+            const rotateLeft = document.createElement('button');
+            rotateLeft.className = 'rotate-btn';
+            rotateLeft.innerHTML = '<i class="fas fa-undo"></i>';
+            rotateLeft.title = 'Rotate Left';
+
+            const rotateRight = document.createElement('button');
+            rotateRight.className = 'rotate-btn';
+            rotateRight.innerHTML = '<i class="fas fa-redo"></i>';
+            rotateRight.title = 'Rotate Right';
+
+            controls.appendChild(rotateLeft);
+            controls.appendChild(rotateRight);
+
+            // Image
+            const img = document.createElement('img');
+            img.src = reader.result;
+            img.dataset.rotation = '0';
+            img.dataset.filename = file.name;
+
+            // Progress bar
+            const progressWrapper = document.createElement('div');
+            progressWrapper.className = 'progress-wrapper';
+            const progressBar = document.createElement('div');
+            progressBar.className = 'progress-bar';
+            progressWrapper.appendChild(progressBar);
+
+            // Filter buttons
+            const filterButtons = document.createElement('div');
+            filterButtons.className = 'filter-buttons';
+
+            const filters = [
+                { name: 'Original', filter: 'none' },
+                { name: 'Grayscale', filter: 'grayscale(100%)' },
+                { name: 'Sepia', filter: 'sepia(100%)' },
+                { name: 'Contrast', filter: 'contrast(150%)' }
+            ];
+
+            filters.forEach(({ name, filter }) => {
+                const button = document.createElement('button');
+                button.className = 'btn btn-sm btn-outline-primary';
+                button.textContent = name;
+                button.onclick = () => img.style.filter = filter;
+                filterButtons.appendChild(button);
+            });
+
+            // Append elements
+            card.appendChild(controls);
+            card.appendChild(img);
+            card.appendChild(filterButtons);
+            card.appendChild(progressWrapper);
+
+            // Rotation handlers
+            let rotation = 0;
+            rotateLeft.onclick = () => {
+                rotation = (rotation - 90) % 360;
+                img.style.transform = `rotate(${rotation}deg)`;
+                img.dataset.rotation = rotation.toString();
+            };
+
+            rotateRight.onclick = () => {
+                rotation = (rotation + 90) % 360;
+                img.style.transform = `rotate(${rotation}deg)`;
+                img.dataset.rotation = rotation.toString();
+            };
+
+            return card;
+        }
+
+        // File input handling
+        document.querySelector('input[type="file"]').addEventListener('change', function(event) {
+            const files = event.target.files;
+            if (files.length === 0) return;
+
+            // Validate file types
+            for (let file of files) {
+                if (!file.type.match('image/(jpeg|jpg|png)')) {
+                    showAlert('Please select only JPG, JPEG, or PNG images.', 'warning');
+                    this.value = '';
+                    return;
+                }
+            }
+
+            // Show preview section
+            document.getElementById('previewSection').style.display = 'block';
+
+            // Create preview cards
+            const previewContainer = document.getElementById('preview-container');
+            previewContainer.innerHTML = '';
+
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const card = createImageCard(file, reader);
+                    previewContainer.appendChild(card);
+                };
+                reader.readAsDataURL(file);
+            });
+
+            // Scroll to preview section
+            document.getElementById('previewSection').scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        });
+
+        // Form submission handler
+        document.getElementById('converter-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            
+            const files = document.getElementById('images').files;
+            if (files.length === 0) {
+                showAlert('Please select at least one image.', 'warning');
+                return;
+            }
+
+            const loadingOverlay = document.querySelector('.loading-overlay');
+            loadingOverlay.style.display = 'flex';
+            
+            const formData = new FormData(this);
+
+            // Add rotation values
+            document.querySelectorAll('.preview-card img').forEach(img => {
+                formData.append(`rotation_${img.dataset.filename}`, img.dataset.rotation || '0');
+            });
+
+            try {
+                // Update progress bars
+                const progressBars = document.querySelectorAll('.progress-bar');
+                progressBars.forEach(bar => {
+                    let progress = 0;
+                    const interval = setInterval(() => {
+                        progress += 2;
+                        bar.style.width = `${progress}%`;
+                        if (progress >= 100) clearInterval(interval);
+                    }, 50);
+                });
+
+                const response = await fetch('', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Conversion failed');
+                }
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'converted.pdf';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                
+                showAlert('PDF conversion successful!');
+            } catch (error) {
+                console.error('Conversion error:', error);
+                showAlert('Failed to convert images to PDF. Please try again.', 'danger');
+            } finally {
+                loadingOverlay.style.display = 'none';
+            }
+        });
+
+        // FAQ handling
+        document.querySelectorAll('.faq-question').forEach(question => {
+            question.addEventListener('click', () => {
+                const faqItem = question.parentElement;
+                faqItem.classList.toggle('active');
+            });
+        });
+
+        // Drag and drop handling
+        const dropZone = document.querySelector('.drop-zone');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            dropZone.classList.add('dragover');
+        }
+
+        function unhighlight(e) {
+            dropZone.classList.remove('dragover');
+        }
+
+        dropZone.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            document.querySelector('input[type="file"]').files = files;
+            
+            // Trigger change event
+            const event = new Event('change');
+            document.querySelector('input[type="file"]').dispatchEvent(event);
+        }
+
+        // Counter animations
+        function animateCounter(elementId, finalValue, duration) {
+            let current = 0;
+            const increment = finalValue / (duration / 50);
+            const counter = document.getElementById(elementId);
+            
+            const timer = setInterval(() => {
+                current += increment;
+                counter.textContent = Math.round(current);
+                if (current >= finalValue) {
+                    clearInterval(timer);
+                    counter.textContent = finalValue;
+                }
+            }, 50);
+        }
+
+        // Initialize counters with animation
+        setTimeout(() => {
+            animateCounter('conversions-counter', 1234, 2000);
+            animateCounter('users-counter', 5678, 2000);
+            animateCounter('files-counter', 9012, 2000);
+        }, 500);
+    </script>
+</body>
+</html>
