@@ -1,0 +1,101 @@
+{% extends "converter/base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>My Conversions</h2>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3>{{ stats.total_conversions }}</h3>
+                    <p class="mb-0">Total Conversions</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3>{{ stats.successful_conversions }}</h3>
+                    <p class="mb-0">Successful Conversions</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h3>{{ stats.total_size|filesizeformat }}</h3>
+                    <p class="mb-0">Total Size Processed</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conversions Table -->
+    <div class="card">
+        <div class="card-body">
+            {% if conversions %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Images</th>
+                                <th>PDF Size</th>
+                                <th>Status</th>
+                                <th>Processing Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for conversion in conversions %}
+                                <tr>
+                                    <td>{{ conversion.timestamp|date:"M d, Y H:i" }}</td>
+                                    <td>{{ conversion.num_images }}</td>
+                                    <td>{{ conversion.pdf_size|filesizeformat }}</td>
+                                    <td>
+                                        <span class="badge badge-{{ conversion.status|lower }}">
+                                            {{ conversion.status }}
+                                        </span>
+                                    </td>
+                                    <td>{{ conversion.processing_time|floatformat:2 }}s</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-file-pdf fa-3x text-muted mb-3"></i>
+                    <p class="text-muted mb-0">No conversions yet</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .badge-completed {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .badge-failed {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .badge-processing {
+        background-color: #17a2b8;
+        color: white;
+    }
+
+    .table td {
+        vertical-align: middle;
+    }
+</style>
+{% endblock %}

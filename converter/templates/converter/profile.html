@@ -1,0 +1,130 @@
+{% extends "converter/base.html" %}
+
+{% block title %}Profile - PDF Converter{% endblock title %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Profile Card -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    {% if profile.avatar %}
+                        <img src="{{ profile.avatar.url }}" alt="Profile Picture" 
+                             class="rounded-circle img-fluid mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                    {% else %}
+                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-3"
+                             style="width: 150px; height: 150px; font-size: 3rem;">
+                            {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                        </div>
+                    {% endif %}
+                    
+                    <h4>{{ user.get_full_name }}</h4>
+                    <p class="text-muted">{{ user.email }}</p>
+                    <p class="text-muted small">
+                        Member since: {{ user.date_joined|date:"M d, Y" }}<br>
+                        Last login: {{ user.last_login|date:"M d, Y H:i" }}
+                    </p>
+                    
+                    <a href="{% url 'converter:edit_profile' %}" class="btn btn-primary">
+                        <i class="fas fa-edit mr-2"></i>Edit Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Card -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <h3>{{ total_conversions }}</h3>
+                            <p class="text-muted">Total Conversions</p>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <h3>{{ successful_conversions }}</h3>
+                            <p class="text-muted">Successful Conversions</p>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <h3>{{ total_size|filesizeformat }}</h3>
+                            <p class="text-muted">Total Size Processed</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Conversions -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Recent Conversions</h5>
+                    <a href="{% url 'converter:my_conversions' %}" class="btn btn-sm btn-primary">
+                        View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if recent_conversions %}
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Images</th>
+                                        <th>Size</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for conversion in recent_conversions %}
+                                        <tr>
+                                            <td>{{ conversion.timestamp|date:"M d, Y H:i" }}</td>
+                                            <td>{{ conversion.num_images }}</td>
+                                            <td>{{ conversion.pdf_size|filesizeformat }}</td>
+                                            <td>
+                                                <span class="badge badge-{{ conversion.status }}">
+                                                    {{ conversion.status }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-center text-muted my-4">No conversions yet</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .badge-completed {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .badge-failed {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .badge-processing {
+        background-color: #17a2b8;
+        color: white;
+    }
+</style>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+    // Auto-hide alerts after 5 seconds
+    setTimeout(function() {
+        $('.alert').alert('close');
+    }, 5000);
+</script>
+{% endblock extra_js %}

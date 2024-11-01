@@ -1,4 +1,6 @@
 from django import forms
+from .models import Conversion
+
 
 class ImageUploadForm(forms.Form):
     images = forms.ImageField(widget=forms.ClearableFileInput(attrs={'multiple': True}))

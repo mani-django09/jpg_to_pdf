@@ -218,6 +218,201 @@
     </style>
 </head>
 <body>
+    <header class="main-header">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+            <div class="container">
+                <!-- Logo and Brand -->
+                <a class="navbar-brand d-flex align-items-center" href="{% url 'converter:index' %}">
+                    <i class="fas fa-file-pdf text-primary mr-2"></i>
+                    <span class="font-weight-bold">PDF Converter</span>
+                </a>
+                
+                <!-- Mobile Toggle Button -->
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarContent">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                
+                <!-- Navigation Content -->
+                <div class="collapse navbar-collapse" id="navbarContent">
+                    <!-- Main Navigation -->
+                    <ul class="navbar-nav mr-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'converter:index' %}">
+                                <i class="fas fa-home mr-1"></i>Home
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="toolsDropdown" 
+                               role="button" data-toggle="dropdown">
+                                <i class="fas fa-tools mr-1"></i>Tools
+                            </a>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item" href="{% url 'converter:index' %}">
+                                    <i class="fas fa-image mr-2"></i>Image to PDF
+                                </a>
+                                <a class="dropdown-item" href="#">
+                                    <i class="fas fa-object-group mr-2"></i>Merge PDF
+                                </a>
+                                <a class="dropdown-item" href="#">
+                                    <i class="fas fa-compress-arrows-alt mr-2"></i>Compress PDF
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#">
+                                    <i class="fas fa-th-large mr-2"></i>All Tools
+                                </a>
+                            </div>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link" href="#features">
+                                <i class="fas fa-star mr-1"></i>Features
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link" href="#faq">
+                                <i class="fas fa-question-circle mr-1"></i>FAQ
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <!-- User Navigation -->
+                    <div class="navbar-nav ml-auto">
+                        {% if user.is_authenticated %}
+                            <div class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="userDropdown" 
+                                   role="button" data-toggle="dropdown">
+                                    {% if user.userprofile.avatar %}
+                                        <img src="{{ user.userprofile.avatar.url }}" 
+                                             alt="{{ user.username }}" 
+                                             class="rounded-circle mr-1" 
+                                             style="width: 24px; height: 24px; object-fit: cover;">
+                                    {% else %}
+                                        <i class="fas fa-user-circle mr-1"></i>
+                                    {% endif %}
+                                    {{ user.get_short_name|default:user.username }}
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-right">
+                                    <div class="dropdown-item-text">
+                                        <small class="text-muted">Signed in as</small><br>
+                                        <strong>{{ user.email }}</strong>
+                                    </div>
+                                    <div class="dropdown-divider"></div>
+                                    
+                                    <a class="dropdown-item" href="{% url 'converter:profile' %}">
+                                        <i class="fas fa-user mr-2"></i>Profile
+                                    </a>
+                                    <a class="dropdown-item" href="{% url 'converter:my_conversions' %}">
+                                        <i class="fas fa-history mr-2"></i>My Conversions
+                                    </a>
+                                    <a class="dropdown-item" href="{% url 'converter:settings' %}">
+                                        <i class="fas fa-cog mr-2"></i>Settings
+                                    </a>
+                                    
+                                    {% if user.is_staff %}
+                                        <div class="dropdown-divider"></div>
+                                        <a class="dropdown-item" href="{% url 'admin:index' %}">
+                                            <i class="fas fa-tools mr-2"></i>Admin Panel
+                                        </a>
+                                    {% endif %}
+                                    
+                                    <div class="dropdown-divider"></div>
+                                    <a class="dropdown-item text-danger" href="{% url 'converter:logout' %}">
+                                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                                    </a>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="nav-item d-flex align-items-center">
+                                <a href="{% url 'converter:login' %}" 
+                                   class="btn btn-outline-primary mr-2">
+                                    <i class="fas fa-sign-in-alt mr-1"></i>Login
+                                </a>
+                                <a href="{% url 'converter:signup' %}" 
+                                   class="btn btn-primary">
+                                    <i class="fas fa-user-plus mr-1"></i>Sign Up
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+    
+    <!-- Add these styles to your CSS -->
+    <style>
+        .main-header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: white;
+        }
+    
+        .navbar {
+            padding: 0.5rem 1rem;
+        }
+    
+        .navbar-brand {
+            font-size: 1.5rem;
+        }
+    
+        .nav-link {
+            font-weight: 500;
+            padding: 0.5rem 1rem !important;
+            transition: color 0.3s;
+        }
+    
+        .nav-link:hover {
+            color: var(--primary-color) !important;
+        }
+    
+        .dropdown-item {
+            padding: 0.5rem 1.5rem;
+            transition: all 0.2s;
+        }
+    
+        .dropdown-item:hover {
+            background-color: #f8f9fa;
+            color: var(--primary-color);
+        }
+    
+        .dropdown-item i {
+            width: 20px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+    
+        .dropdown-item:hover i {
+            transform: translateX(3px);
+        }
+    
+        .btn {
+            padding: 0.5rem 1.5rem;
+            font-weight: 500;
+        }
+    
+        .btn-outline-primary {
+            border-width: 2px;
+        }
+    
+        .dropdown-item-text {
+            padding: 0.5rem 1.5rem;
+        }
+    
+        @media (max-width: 992px) {
+            .navbar-nav .dropdown-menu {
+                border: none;
+                padding: 0;
+                margin: 0;
+            }
+            
+            .dropdown-item {
+                padding-left: 2.5rem;
+            }
+        }
+    </style>
     <!-- Loading Overlay -->
     <div class="loading-overlay">
         <div class="text-white text-center">
