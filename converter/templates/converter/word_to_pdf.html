@@ -1,0 +1,719 @@
+{% extends 'converter/base.html' %}
+{% load static %}
+
+{% block title %}Word to PDF Converter - Free Online Tool{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Hero Section */
+    .hero-section {
+        background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
+        color: white;
+        padding: 4rem 0;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-section::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    .stats-badge {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        backdrop-filter: blur(4px);
+        font-size: 0.875rem;
+        margin-top: 1rem;
+    }
+
+    /* Drop Zone */
+    .drop-zone {
+        background: white;
+        border: 2px dashed #dee2e6;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        min-height: 300px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        position: relative;
+    }
+
+    .drop-zone.drag-over {
+        border-color: #4F46E5;
+        background: rgba(79, 70, 229, 0.02);
+        transform: scale(1.01);
+    }
+
+    .upload-icon {
+        color: #4F46E5;
+        margin-bottom: 1.5rem;
+        transition: transform 0.3s ease;
+    }
+
+    .drop-zone:hover .upload-icon {
+        transform: translateY(-5px);
+    }
+
+    .supported-formats {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .format-badge {
+        background: #f8f9fa;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* File Info */
+    .file-info {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+        display: none;
+        border: 1px solid #e9ecef;
+    }
+
+    .file-info.show {
+        display: block;
+        animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+        from { 
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .file-preview {
+        width: 40px;
+        height: 40px;
+        background: #e9ecef;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+    }
+
+    /* Feature Cards */
+    .feature-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        height: 100%;
+        transition: all 0.3s ease;
+        border: 1px solid #e9ecef;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border-color: #4F46E5;
+    }
+
+    .feature-card .icon {
+        font-size: 2rem;
+        color: #4F46E5;
+        margin-bottom: 1rem;
+        background: rgba(79, 70, 229, 0.1);
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+
+    .feature-card:hover .icon {
+        background: #4F46E5;
+        color: white;
+    }
+
+    .feature-card h3 {
+        color: #1a1a1a;
+        font-size: 1.25rem;
+        margin-bottom: 0.75rem;
+    }
+
+    /* Settings Panel */
+    .settings-panel {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+    }
+
+    .settings-toggle {
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 4px;
+        transition: background-color 0.2s ease;
+    }
+
+    .settings-toggle:hover {
+        background: #e9ecef;
+    }
+
+    /* Progress Bars */
+    .progress {
+        display: none;
+        height: 6px;
+        margin-top: 1rem;
+        background-color: #e9ecef;
+        border-radius: 9999px;
+        overflow: hidden;
+    }
+
+    .progress.show {
+        display: block;
+    }
+
+    .progress-bar {
+        transition: width 0.3s ease;
+    }
+
+    /* Loading Overlay */
+    .loading-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.7);
+        backdrop-filter: blur(4px);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .loading-overlay.active {
+        display: flex;
+    }
+
+    .loading-content {
+        text-align: center;
+        color: white;
+    }
+
+    .loading-spinner {
+        width: 40px;
+        height: 40px;
+        margin-bottom: 1rem;
+    }
+
+    /* Alert Styles */
+    .alert-floating {
+        display: none;
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        max-width: 350px;
+        z-index: 9999;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border-radius: 8px;
+        animation: slideIn 0.3s ease;
+    }
+
+    .alert-floating.show {
+        display: block;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    /* FAQ Section */
+    .faq-item {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .faq-item:hover {
+        border-color: #4F46E5;
+        transform: translateX(5px);
+    }
+
+    .faq-item h5 {
+        color: #1a1a1a;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .faq-item h5 svg {
+        margin-right: 0.75rem;
+        color: #4F46E5;
+    }
+
+    .faq-answer {
+        display: none;
+        padding-top: 1rem;
+        border-top: 1px solid #e9ecef;
+        margin-top: 1rem;
+    }
+
+    .faq-item.active .faq-answer {
+        display: block;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    /* Responsive Styles */
+    @media (max-width: 768px) {
+        .hero-section {
+            padding: 3rem 0;
+        }
+
+        .supported-formats {
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .feature-card {
+            margin-bottom: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Loading Overlay -->
+<div class="loading-overlay">
+    <div class="loading-content">
+        <div class="loading-spinner">
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" 
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="2" x2="12" y2="6"/>
+                <line x1="12" y1="18" x2="12" y2="22"/>
+                <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/>
+                <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/>
+                <line x1="2" y1="12" x2="6" y2="12"/>
+                <line x1="18" y1="12" x2="22" y2="12"/>
+                <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/>
+                <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/>
+            </svg>
+        </div>
+        <div id="conversionStatus">Converting your document...</div>
+        <small class="text-muted" id="conversionDetails"></small>
+    </div>
+</div>
+
+<!-- Alert -->
+<div class="alert alert-floating alert-dismissible fade" role="alert">
+    <span class="alert-message"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container text-center">
+        <h1 class="display-4 mb-3">Word to PDF Converter</h1>
+        <p class="lead mb-4">Convert Word documents to PDF format with perfect formatting</p>
+        <div class="stats-badge d-inline-block">
+            {{ stats.conversions_today|default:"1,234" }} documents converted today
+        </div>
+    </div>
+</section>
+
+<!-- Main Content -->
+<main class="container py-4">
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <!-- Drop Zone -->
+            <div class="drop-zone p-4 border rounded" id="dropZone">
+                <div class="upload-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" 
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                        <line x1="10" y1="9" x2="8" y2="9"/>
+                    </svg>
+                </div>
+                <h4 class="h5 mb-2">Drag & Drop Word Document Here</h4>
+                <p class="mb-2 text-muted">or click to browse</p>
+                
+                <div class="supported-formats">
+                    <span class="format-badge">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" 
+                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" 
+                             stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                        DOC
+                    </span>
+                    <span class="format-badge">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" 
+                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" 
+                             stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                        DOCX
+                    </span>
+                </div>
+            </div>
+
+            <!-- File Info -->
+            <div id="fileInfo" class="file-info">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <div class="file-preview">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" 
+                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                        </div>
+                        <div>
+                            <h6 class="mb-1" id="fileName"></h6>
+                            <small class="text-muted" id="fileSize"></small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-danger" id="removeFile">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" 
+                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" 
+                             stroke-linejoin="round" class="me-1">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                        Remove
+                    </button>
+                </div>
+            </div>
+
+            <!-- Settings Panel -->
+            <div class="settings-panel">
+                <div class="mb-3">
+                    <h6>Conversion Settings</h6>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="preserveFormatting" checked>
+                                <label class="form-check-label" for="preserveFormatting">
+                                    Preserve Formatting
+                                </label>
+                            </div>
+                            <small class="text-muted d-block mt-1">Maintain original document styling</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="optimizePDF" checked>
+                                <label class="form-check-label" for="optimizePDF">
+                                    Optimize PDF Size
+                                </label>
+                            </div>
+                            <small class="text-muted d-block mt-1">Reduce file size while maintaining quality</small>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="convertImages" checked>
+                                <label class="form-check-label" for="convertImages">
+                                    Convert Images
+                                </label>
+                            </div>
+                            <small class="text-muted d-block mt-1">Include images in conversion</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="protectPDF">
+                                <label class="form-check-label" for="protectPDF">
+                                    Protect PDF
+                                </label>
+                            </div>
+                            <small class="text-muted d-block mt-1">Add password protection to PDF</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress mt-3" style="display: none;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" 
+                     role="progressbar" style="width: 0%"></div>
+            </div>
+
+            <!-- Convert Button -->
+            <button class="btn btn-primary btn-lg w-100 mt-3" id="convertButton">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" 
+                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" 
+                     stroke-linejoin="round" class="me-2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                Convert to PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- Features -->
+    <div class="row mt-5">
+        {% for feature in features %}
+        <div class="col-md-4 mb-3">
+            <div class="feature-card">
+                <div class="icon">{{ feature.icon|safe }}</div>
+                <h3>{{ feature.title }}</h3>
+                <p class="mb-0">{{ feature.description }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- FAQ Section -->
+    <section class="mt-5">
+        <h3 class="text-center mb-4">Frequently Asked Questions</h3>
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                {% for faq in faqs %}
+                <div class="faq-item" onclick="toggleFAQ(this)">
+                    <h5>
+                        <span class="d-flex align-items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" 
+                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" 
+                                 stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                                <line x1="12" y1="17" x2="12.01" y2="17"/>
+                            </svg>
+                            {{ faq.question }}
+                        </span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" 
+                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" 
+                             stroke-linejoin="round" class="chevron">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </h5>
+                    <div class="faq-answer">{{ faq.answer }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dropZone = document.querySelector('.drop-zone');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const removeFileBtn = document.getElementById('removeFile');
+    const convertButton = document.getElementById('convertButton');
+    const progressBar = document.querySelector('.progress');
+    const progressBarInner = progressBar.querySelector('.progress-bar');
+    let currentFile = null;
+
+    const allowedTypes = [
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+
+    function handleFile(file) {
+        if (!allowedTypes.includes(file.type)) {
+            showAlert('Please upload only Word documents (DOC or DOCX).', 'danger');
+            return;
+        }
+
+        if (file.size > 50 * 1024 * 1024) {
+            showAlert('File size exceeds 50MB limit.', 'danger');
+            return;
+        }
+
+        currentFile = file;
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        fileInfo.classList.add('show');
+        dropZone.classList.add('border-primary');
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function showAlert(message, type) {
+        const alert = document.querySelector('.alert-floating');
+        alert.className = `alert alert-floating alert-${type} alert-dismissible fade show`;
+        alert.querySelector('.alert-message').textContent = message;
+        
+        setTimeout(() => {
+            alert.classList.remove('show');
+        }, 3000);
+    }
+
+    function updateProgress(percent) {
+        progressBar.style.display = 'block';
+        progressBarInner.style.width = `${percent}%`;
+        document.getElementById('conversionDetails').textContent = `${Math.round(percent)}% complete`;
+    }
+
+    // Event Listeners
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('drag-over');
+    });
+
+    dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        const file = e.dataTransfer.files[0];
+        handleFile(file);
+    });
+
+    dropZone.addEventListener('click', () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.doc,.docx';
+        input.onchange = (e) => handleFile(e.target.files[0]);
+        input.click();
+    });
+
+    removeFileBtn.addEventListener('click', () => {
+        currentFile = null;
+        fileInfo.classList.remove('show');
+        dropZone.classList.remove('border-primary');
+        progressBar.style.display = 'none';
+    });
+
+    convertButton.addEventListener('click', async () => {
+        if (!currentFile) {
+            showAlert('Please select a Word document to convert.', 'warning');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', currentFile);
+        formData.append('preserve_formatting', document.getElementById('preserveFormatting').checked);
+        formData.append('optimize_pdf', document.getElementById('optimizePDF').checked);
+        formData.append('convert_images', document.getElementById('convertImages').checked);
+        formData.append('protect_pdf', document.getElementById('protectPDF').checked);
+
+        try {
+            document.querySelector('.loading-overlay').classList.add('active');
+            progressBar.style.display = 'block';
+            document.getElementById('conversionStatus').textContent = 'Converting your document...';
+            
+            const response = await fetch('{% url "converter:word_to_pdf" %}', {
+                method: 'POST',
+                body: formData,
+                onUploadProgress: (progressEvent) => {
+                    if (progressEvent.lengthComputable) {
+                        const percent = (progressEvent.loaded / progressEvent.total) * 100;
+                        updateProgress(percent);
+                    }
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Conversion failed');
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = currentFile.name.replace(/\.(doc|docx)$/i, '.pdf');
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            showAlert('Conversion completed successfully!', 'success');
+            currentFile = null;
+            fileInfo.classList.remove('show');
+            dropZone.classList.remove('border-primary');
+
+        } catch (error) {
+            console.error('Conversion error:', error);
+            showAlert('An error occurred during conversion.', 'danger');
+        } finally {
+            document.querySelector('.loading-overlay').classList.remove('active');
+            progressBar.style.display = 'none';
+        }
+    });
+
+    // FAQ Toggle
+    window.toggleFAQ = function(element) {
+        const wasActive = element.classList.contains('active');
+        document.querySelectorAll('.faq-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        if (!wasActive) {
+            element.classList.add('active');
+        }
+    };
+
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

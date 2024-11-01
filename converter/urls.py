@@ -21,6 +21,7 @@ urlpatterns = [
     path('profile/', views.profile_view, name='profile'),
     path('profile/edit/', views.edit_profile, name='edit_profile'),
     #path('edit_profile/', views.edit_profile, name='edit_profile'),
+    path('word_to_pdf/', views.word_to_pdf, name='word_to_pdf'),
 
     path('my_conversions/', views.my_conversions, name='my_conversions'),
     path('settings/', views.settings_view, name='settings'),

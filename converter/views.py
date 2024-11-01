@@ -256,3 +256,152 @@ def get_statistics(request):
         return JsonResponse({'error': str(e)}, status=500)
     
     temp_filename = os.path.join(settings.TEMP_DIR, f'{settings.TEMP_PREFIX}{time.time()}.jpg')
+
+
+from django.shortcuts import render
+
+def index(request):
+    """
+    View function for home page
+    """
+    context = {
+        'title': 'Image to PDF Converter',
+        'active_tab': 'index'
+    }
+    return render(request, 'converter/upload.html', context)
+
+
+from django.shortcuts import render
+from django.http import HttpResponse, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import os
+from django.conf import settings
+import tempfile
+from docx2pdf import convert
+import pythoncom  # Required for COM library initialization
+
+@csrf_exempt
+def word_to_pdf(request):
+    if request.method == 'POST' and request.FILES.get('file'):
+        try:
+            # Initialize COM library for thread
+            pythoncom.CoInitialize()
+            
+            word_file = request.FILES['file']
+            
+            # Get conversion settings from request
+            preserve_formatting = request.POST.get('preserve_formatting', 'true') == 'true'
+            optimize_pdf = request.POST.get('optimize_pdf', 'true') == 'true'
+            convert_images = request.POST.get('convert_images', 'true') == 'true'
+            protect_pdf = request.POST.get('protect_pdf', 'false') == 'true'
+
+            # Validate file size (50MB limit)
+            if word_file.size > 50 * 1024 * 1024:  # 50MB in bytes
+                return JsonResponse({'error': 'File size exceeds 50MB limit'}, status=400)
+
+            # Validate file type
+            if not word_file.name.endswith(('.doc', '.docx')):
+                return JsonResponse({'error': 'Invalid file type. Only .doc and .docx files are allowed'}, status=400)
+
+            # Create temp directory
+            with tempfile.TemporaryDirectory() as temp_dir:
+                # Save uploaded file
+                temp_word_path = os.path.join(temp_dir, word_file.name)
+                temp_pdf_path = os.path.join(temp_dir, os.path.splitext(word_file.name)[0] + '.pdf')
+                
+                try:
+                    # Save the uploaded file
+                    with open(temp_word_path, 'wb+') as destination:
+                        for chunk in word_file.chunks():
+                            destination.write(chunk)
+                    
+                    # Convert to PDF
+                    convert(temp_word_path, temp_pdf_path)
+                    
+                    # Read the PDF and send it as response
+                    with open(temp_pdf_path, 'rb') as pdf_file:
+                        response = HttpResponse(pdf_file.read(), content_type='application/pdf')
+                        response['Content-Disposition'] = f'attachment; filename="{os.path.splitext(word_file.name)[0]}.pdf"'
+                        return response
+
+                except Exception as e:
+                    print(f"Conversion error: {str(e)}")
+                    return JsonResponse({'error': f'Conversion failed: {str(e)}'}, status=500)
+                
+                finally:
+                    # Cleanup: Remove temporary files
+                    try:
+                        if os.path.exists(temp_word_path):
+                            os.remove(temp_word_path)
+                        if os.path.exists(temp_pdf_path):
+                            os.remove(temp_pdf_path)
+                    except Exception as e:
+                        print(f"Cleanup error: {str(e)}")
+
+        except Exception as e:
+            print(f"Processing error: {str(e)}")
+            return JsonResponse({'error': f'Processing failed: {str(e)}'}, status=500)
+            
+        finally:
+            # Uninitialize COM library
+            pythoncom.CoUninitialize()
+
+    # If not POST request, render the template
+    context = {
+        'features': [
+            {
+                'icon': '''<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" 
+                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                          <polyline points="7.5 4.21 12 6.81 16.5 4.21"/>
+                          <polyline points="7.5 19.79 7.5 14.6 3 12"/>
+                          <polyline points="21 12 16.5 14.6 16.5 19.79"/>
+                          <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                          <line x1="12" y1="22.08" x2="12" y2="12"/>
+                        </svg>''',
+                'title': 'Perfect Formatting',
+                'description': 'Maintains original document formatting, fonts, images, and layout'
+            },
+            {
+                'icon': '''<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" 
+                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="12" cy="12" r="10"/>
+                          <polyline points="12 6 12 12 16 14"/>
+                        </svg>''',
+                'title': 'Fast Conversion',
+                'description': 'Convert your documents in seconds with high accuracy'
+            },
+            {
+                'icon': '''<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" 
+                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>''',
+                'title': 'Secure Process',
+                'description': 'Your documents are automatically deleted after conversion'
+            }
+        ],
+        'faqs': [
+            {
+                'question': 'What file types are supported?',
+                'answer': 'Our converter supports DOC and DOCX files from Microsoft Word.'
+            },
+            {
+                'question': 'Will my formatting be preserved?',
+                'answer': 'Yes, we maintain all formatting including fonts, images, tables, and layouts.'
+            },
+            {
+                'question': 'Is there a file size limit?',
+                'answer': 'Yes, you can upload Word documents up to 50MB in size.'
+            },
+            {
+                'question': 'How long does conversion take?',
+                'answer': 'Most documents are converted within seconds, depending on the file size and complexity.'
+            }
+        ],
+        'stats': {
+            'conversions_today': '1,234'
+        }
+    }
+    
+    return render(request, 'converter/word_to_pdf.html', context)

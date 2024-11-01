@@ -154,8 +154,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+#STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 MEDIA_URL = '/media/'
@@ -173,3 +176,11 @@ USE_TZ = True
 
 TEMP_DIR = tempfile.gettempdir()
 TEMP_PREFIX = 'pdf_converter_'
+
+
+FILE_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50MB
+
+TEMP_ROOT = os.path.join(BASE_DIR, 'temp')
+if not os.path.exists(TEMP_ROOT):
+    os.makedirs(TEMP_ROOT)
